@@ -13,7 +13,7 @@ def createXML():
 
         articles = json_data['articles']
         for index, val in enumerate(articles):
-            currentArticle = json_data["articles"][index]["title"].encode('utf-8').strip()
+            currentArticle = json_data["articles"][index]["title"]
             with open("/tmp/led-source-news", 'w') as f:
                 f.write('<message type="scroll" color="#FF0028" style="bold">' + str(currentArticle) + '</message>')
                 f.close()

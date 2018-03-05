@@ -1,6 +1,7 @@
+from setproctitle import setproctitle
+
 import requests
 import time
-from xml.etree import ElementTree
 # api_address = 'http://api.openweathermap.org/data/2.5/weather?appid=5d828247d61c0e4d3bb35dc1e30f3fde&q=Boston'
 # json_data = requests.get(api_address).json()
 # #print(json_data)
@@ -26,8 +27,11 @@ def create_xml():
     file.write(message)
     file.flush()
     file.close()
-    time.sleep(60)
+    time.sleep(120)
 
 
-while True:
-    create_xml()
+if __name__ == "__main__":
+    setproctitle("msource-weather")
+    while True:
+        create_xml()
+
