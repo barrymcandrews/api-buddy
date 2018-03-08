@@ -1,5 +1,4 @@
 from setproctitle import setproctitle
-
 import requests
 import time
 # api_address = 'http://api.openweathermap.org/data/2.5/weather?appid=5d828247d61c0e4d3bb35dc1e30f3fde&q=Boston'
@@ -27,7 +26,7 @@ def create_xml():
     file.write(message)
     file.flush()
     file.close()
-    time.sleep(120)
+    time.sleep(30)
 
 
 if __name__ == "__main__":

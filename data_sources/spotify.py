@@ -34,7 +34,7 @@ def index():
         sp = spotipy.Spotify(auth=access_token)
         current_song = sp.current_user_playing_track()
         if current_song is not None:
-            song_display = "<message type=\"scroll\" color=\"#84bd00\"> NOW PLAYING:" + \
+            song_display = "<message type=\"scroll\" color=\"#84bd00\"> NOW PLAYING:   " + \
                           current_song['item']['name'] + " - "
             for i in range(len(current_song['item']['artists'])):
                 if i != len(current_song['item']['artists']) - 1:
@@ -42,7 +42,7 @@ def index():
                 else:
                     song_display += (current_song['item']['artists'][i]['name'] + "</message>")
                     print(song_display)
-                    out_file = open("/tmp/led-source-spotify", "w")
+                    out_file = open("/tmp/led-source-spotify", "w", encoding="utf-8")
                     out_file.write(song_display)
                     out_file.close()
         while True:
@@ -60,7 +60,7 @@ def index():
                             else:
                                 song_display += (current_song['item']['artists'][i]['name'] + "</message>")
                                 print(song_display)
-                                out_file = open("/tmp/led-source-spotify", "w")
+                                out_file = open("/tmp/led-source-spotify", "w", encoding="utf-8")
                                 out_file.write(song_display)
                                 out_file.close()
 

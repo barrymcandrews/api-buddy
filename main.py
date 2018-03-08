@@ -1,13 +1,14 @@
 #!/usr/bin/env python3.6
 import asyncio
-from setproctitle import setproctitle
+import signal
+import os
 import uvloop
+from setproctitle import setproctitle
 from matrix import write_to_board
 from sources import XmlSource
 
 loop = uvloop.new_event_loop()
 asyncio.set_event_loop(loop)
-
 
 srcs = [
     XmlSource("/tmp/led-source-spotify"),
@@ -24,11 +25,16 @@ if __name__ == '__main__':
 
     asyncio.ensure_future(write_to_board(srcs))
 
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        loop.close()
+    tasks = asyncio.gather(*asyncio.Task.all_tasks(), return_exceptions=True)
+    loop.add_signal_handler(signal.SIGTERM, lambda: tasks.cancel())
+    loop.add_signal_handler(signal.SIGINT, lambda: tasks.cancel())
 
+    print("Starting Event Loop...")
+    try:
+        loop.run_until_complete(tasks)
+    finally:
+        loop.stop()
+        loop.close()
+        print("Event Loop Stopped.")
+        os._exit(os.EX_OK)
 

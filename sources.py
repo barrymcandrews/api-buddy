@@ -1,18 +1,8 @@
-from abc import abstractmethod
 import asyncio
-from rgbmatrix import graphics
-
 import aiofiles
 import xml.etree.cElementTree as ElementTree
 import os
-
-from matrix import ScrollingTextMessage, Message, StaticTextMessage
-
-
-def hex_to_rgb(value):
-    value = value.lstrip('#')
-    lv = len(value)
-    return tuple(int(value[i:i + lv // 3], 16) for i in range(0, lv, lv // 3))
+from matrix import ScrollingTextMessage, Message, StaticTextMessage, ImageMessage
 
 
 def create_fifo(path):
@@ -22,69 +12,54 @@ def create_fifo(path):
     os.chmod(path, mode=0o777)
 
 
-class Source(object):
+async def create_message(string) -> Message:
+    xml = ElementTree.fromstring(string, parser=ElementTree.XMLParser(encoding="utf-8"))
+    await asyncio.sleep(0.05)
+    font_type = ""
+    if 'style' in xml.attrib:
+        font_type = "B" if xml.attrib['style'].lower() == 'bold' else "O"
 
-    @abstractmethod
-    async def start_read(self):
-        pass
+    font = "7x13" + font_type
 
-    @abstractmethod
-    def put_message(self, message):
-        pass
+    await asyncio.sleep(0.05)
 
-    @abstractmethod
-    async def get_message(self):
-        pass
+    msg_type = xml.attrib['type'].lower()
+    if msg_type == "scroll":
+        return ScrollingTextMessage(xml.text, font, xml.attrib['color'])
+    elif msg_type == "static":
+        return StaticTextMessage(xml.text, font, xml.attrib['color'], int(xml.attrib['delay']), int(xml.attrib['offset']))
+    elif msg_type == "image":
+        return ImageMessage(xml.attrib['src'], int(xml.attrib['delay']), int(xml.attrib['offset']))
+    else:
+        raise KeyError()
 
 
-class XmlSource(Source):
+class QueueProtocol(asyncio.Protocol):
+    def __init__(self, queue: asyncio.Queue):
+        super().__init__()
+        self.queue = queue
+        self.complete_event = asyncio.Event()
+
+    def data_received(self, data: bytes):
+        string = data.decode("utf-8")
+        print("Data recieved:\n" + string)
+        self.queue.put_nowait(string)
+
+    def connection_lost(self, exc):
+        self.complete_event.set()
+
+
+class XmlSource(object):
     def __init__(self, fifo_path):
         self.path = fifo_path
-        self.queue = asyncio.Queue()
+        self.raw_queue = asyncio.Queue()
+        self.message_queue = asyncio.Queue()
         self.current_message = None
-        self.protocol = self.XmlProtocol(self)
-
-    class XmlProtocol(asyncio.Protocol):
-        def __init__(self, source):
-            super().__init__()
-            self.source = source
-            self.complete_event = asyncio.Event()
-
-        def data_received(self, data: bytes):
-            string = data.decode("utf-8").replace("\n", "")
-            print(string)
-            try:
-                xmlParser = ElementTree.XMLParser(encoding="utf-8")
-                message = self.create_message(ElementTree.fromstring(string, parser=xmlParser))
-                self.source.put_message(message)
-            except KeyError:
-                pass
-
-        def connection_lost(self, exc):
-            self.complete_event.set()
-
-        @staticmethod
-        def create_message(xml) -> Message:
-            font_type = ""
-            if 'style' in xml.attrib:
-                font_type = "B" if xml.attrib['style'].lower() == 'bold' else "O"
-
-            # TODO: Load resources ONLY in-between messages (So you can't see the pause)
-            font = graphics.Font()
-            font.LoadFont("./fonts/7x13" + font_type + ".bdf")
-
-            r, g, b = hex_to_rgb(xml.attrib['color'])
-            text_color = graphics.Color(r, g, b)
-
-            if xml.attrib['type'].lower() == "scroll":
-                return ScrollingTextMessage(xml.text, font, text_color)
-            elif xml.attrib['type'].lower() == "static":
-                return StaticTextMessage(xml.text, font, text_color, int(xml.attrib['delay']), int(xml.attrib['offset']))
-            else:
-                raise KeyError()
+        self.protocol = QueueProtocol(self.raw_queue)
 
     async def start_read(self):
         loop = asyncio.get_event_loop()
+        asyncio.ensure_future(self.parse_data())
         while True:
             try:
                 create_fifo(self.path)
@@ -96,10 +71,19 @@ class XmlSource(Source):
             except OSError:
                 pass
 
-    def put_message(self, message):
-        self.queue.put_nowait(message)
+    async def parse_data(self):
+        while True:
+            try:
+                raw_data = await self.raw_queue.get()
+                await self.message_queue.put(await create_message(raw_data))
+            except (KeyError, ElementTree.ParseError) as e:
+                print(e)
 
     async def get_message(self):
-        while not self.queue.empty():
-            self.current_message = await self.queue.get()
+        while not self.message_queue.empty():
+            self.current_message = await self.message_queue.get()
         return self.current_message
+
+
+
+
