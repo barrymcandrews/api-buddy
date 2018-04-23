@@ -1,4 +1,4 @@
-# API Buddy
+# LED Matrix Controller
 
 Display useful information from web APIs on an [LED Matix](https://www.adafruit.com/product/420)
 

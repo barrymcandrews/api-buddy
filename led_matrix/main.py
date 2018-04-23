@@ -1,29 +1,20 @@
 #!/usr/bin/env python3.6
 import asyncio
+import uvloop
 import signal
 import os
-import uvloop
 from setproctitle import setproctitle
-from matrix import write_to_board
-from sources import XmlSource
+from led_matrix.matrix import start_driver
 
 loop = uvloop.new_event_loop()
 asyncio.set_event_loop(loop)
-
-srcs = [
-    XmlSource("/tmp/led-source-spotify"),
-    XmlSource("/tmp/led-source-weather"),
-    XmlSource("/tmp/led-source-news"),
-    XmlSource("/tmp/led-source-stock")
-]
-
+from led_matrix import mqtt
 
 if __name__ == '__main__':
-    setproctitle("matrix-driver")
-    for source in srcs:
-        asyncio.ensure_future(source.start_read())
+    setproctitle("led-matrix")
 
-    asyncio.ensure_future(write_to_board(srcs))
+    asyncio.ensure_future(mqtt.start_client())
+    asyncio.ensure_future(start_driver())
 
     tasks = asyncio.gather(*asyncio.Task.all_tasks(), return_exceptions=True)
     loop.add_signal_handler(signal.SIGTERM, lambda: tasks.cancel())
