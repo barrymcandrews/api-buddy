@@ -1,27 +1,48 @@
 # LED Matrix Controller
 
-Display useful information from web APIs on an [LED Matix](https://www.adafruit.com/product/420)
+This project lets you control a [LED Matrix](https://www.adafruit.com/product/420) with a web-connected Raspberry Pi. 
+
+##### Controlled by MQTT
+
+You can control the content of the matrix by connecting 
+it to the MQTT server of your choice. This makes it easy to integrate with other IoT appliances.
+
+##### Information at a Glance
+
+This project downloads information in the background from REST APIs, so it's displaying up-to-date information before you know you need it. The home screen is also completely customizable.
+
 
 ## Getting Started
 
-This project requires that you have an LED Matrix connected to a Raspberry Pi. For information on how to set up the hardware see [this guide](https://learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi/driving-matrices)
+For information on how to set up the hardware see [this guide](https://learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi/driving-matrices)
 
-### Running the Server
+### Prerequisites
 
-To start the server just run the script `start_server.sh`
+ * Python 3.6 
+ * [Hzeller Library](https://github.com/hzeller/rpi-rgb-led-matrix)
+ * Pillow
+
+### Running the Program
+
+If this is your first time running the program make sure you run `setup.py` first. This will ensure all python dependencies are met.
+
+Once `setup.py` is complete just run `./led_matrix/main.py`
 
 ```bash
-$ sudo chmod +x start_server.sh
-$ ./start_server.sh
+$ sudo chmod +x led_matrix/main.py
+$ ./led_matrix/main.py
 ```
 
 #### Content Sources
-The project currently has four content sources:
+The project currently has two content sources:
+
  * News - News Api
- * Music - Spotify
- * Weather - Dark Skies API
- * Stocks - Google Finance
+ * Weather - OpenWeatherMap
  
+Other sources are planned to be implemented in the future:
+ 
+ * Spotify
+ * Stocks
 
 #### About
 This project was written for Steelhacks 2018
