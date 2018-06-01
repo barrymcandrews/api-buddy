@@ -1,13 +1,14 @@
 from typing import List
 from hbmqtt.session import ApplicationMessage
+from led_matrix import configuration
 
 
 class Topic(object):
     def __init__(self, topic, qos=None, handler=None):
-        self.topic = topic
+        self.topic = configuration.MqttOptions.topic_prefix + topic
         self.qos = qos
         self.handler = handler
-        self.topic_list = topic.split('/')
+        self.topic_list = self.topic.split('/')
 
     # Returns None if not a match
     # Returns list of wildchars if True
