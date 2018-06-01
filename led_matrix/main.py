@@ -4,11 +4,11 @@ import uvloop
 import signal
 import os
 from setproctitle import setproctitle
-from led_matrix.matrix import start_driver
 
 loop = uvloop.new_event_loop()
 asyncio.set_event_loop(loop)
 from led_matrix import mqtt
+from led_matrix.matrix import start_driver
 
 if __name__ == '__main__':
     setproctitle("led-matrix")
