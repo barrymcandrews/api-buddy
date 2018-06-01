@@ -1,10 +1,9 @@
 from typing import Dict, List
-
 from PIL import Image
 from rgbmatrix import graphics
 
-fonts: Dict[str, graphics.Font] = {}
 colors: Dict[str, graphics.Color] = {}
+fonts: Dict[str, graphics.Font] = {}
 images: Dict[str, Image.Image] = {}
 animations: Dict[str, List[Image.Image]] = {}
 
